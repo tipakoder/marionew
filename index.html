@@ -1,0 +1,66 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
+    <title>Mario</title>
+    <!-- Подключаем общий стиль для окон -->
+    <link rel="stylesheet" href="css/interface.css">
+    <!-- Подключаем стиль для игры -->
+    <link rel="stylesheet" href="css/game.css">
+</head>
+<body>
+    <!-- Экран для старта игры -->
+    <div class="window" id="startGameScreen">
+        <img src="img/gameicon.png" alt="">
+        <h1 class="title"><p>MARIO</p> <span>oksei edition</span></h1>
+        <p id="startGameLoading" class="text">Загружаем игру...</p>
+        <p id="startGameText" class="text">Чтобы начать игру, нажмите на Enter или кнопку ниже..</p>
+        <button id="startGameButton">Начать игру</button>
+    </div>
+    <!-- Экран регистрации -->
+    <div class="window" id="authUser">
+        <h2 class="title">Войдите в аккаунт</h2>
+        <p class="text">Если у вас ещё нет аккаунта, так же введите свой ник и пароль и нажмите "Далее", аккаунт будет создан.</p>
+        <form id="authUserForm">
+            <input name="nickname" type="text" placeholder="Никнейм">
+            <input name="password" type="password" placeholder="Пароль">
+            <p id="authUserFormError" class="error">Ошибка</p>
+            <button>Войти</button>
+        </form>
+    </div>
+    <!-- Экран игры -->
+    <div class="window" id="gameScreen">
+        <h2 class="name" id="gameScreenLevelName">Level1</h2>
+        <div class="statusbar">
+            <p><span>Время: </span><a id="gameScreenTime">01:51</a></p>
+            <p><span>Монетки: </span><a id="gameScreenCoins">0</a></p>
+            <p><span>Жизни: </span><a id="gameScreenLives">0</a></p>
+        </div>
+        <canvas width="1024" height="512" id="viewport"></canvas>
+        <div class="mobileActions">
+            <canvas id='joystickcanvas' width='300' height='300'></canvas>
+        </div>
+    </div>
+    <!-- Экран смерти -->
+    <div class="window" id="deadScreen">
+        <div class="dialog">
+            <h2 class="title">Вы обречены на поражение</h2>
+            <p class="text">Вас убил жалкий гриб..</p>
+        </div>
+    </div>
+    <!-- Экран победы -->
+    <div class="window" id="winScreen">
+        <div class="dialog">
+            <h2 class="title">Неужели..</h2>
+            <p class="text">Да ты ничего такой парень, работящий, и сантехник из тебя ничего..</p>
+        </div>
+    </div>
+
+    <!-- Подключаем джостик -->
+    <script src="js/joystick.js"></script>
+    <!-- Подключаем основные механики игры -->
+    <script src="js/game.js"></script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+/* Отключаем нужные экраны */
+#authUser{display: none;}
+#gameScreen{display: none;}
+#deadScreen{display: none;}
+#winScreen{display: none;}
+#startGameText{display: none;}
+#startGameButton{display: none;}
+
+/* Экран старта игры */
+#startGameScreen> .title{
+    font-size: 28pt;
+    margin-top: 16px;
+    margin-bottom: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#startGameScreen> .title>span{
+    padding: 4px 16px;
+    background-color: #ffeb3b;
+    margin-left: 16px;
+    border-radius: 16px;
+    color: #000;
+    font-weight: 400;
+    font-size: 14pt;
+}
+#startGameScreen> .text{
+    padding: 0 16px;
+    text-align: center;
+}
+#startGameButton{
+    font-size: 32px;
+    font-weight: 200;
+    text-transform: uppercase;
+    background-color: #fff;
+    padding: 16px 32px;
+    border-radius: 16px;
+    margin-top: 32px;
+    cursor: pointer;
+}
+
+/* Экран авторизации */
+#authUser > .title::after{
+    content: "";
+    width: 16px;
+    height: 100%;
+    left: 0;
+    position: absolute;
+    background-color: #ff5a5a;
+}
+#authUser > .title{
+    font-size: 28pt;
+    font-weight: 400;
+    position: relative;
+    padding-left: 32px;
+    margin-bottom: 16px;
+    color: #ff5a5a;
+}
+#authUser > .text{
+    font-size: 12pt;
+    font-weight: 400;
+    padding: 0 16px;
+    max-width: 350px;
+    margin-bottom: 16px;
+}
+#authUser > form{
+    max-width: 350px;
+    width: 100%;
+}
+
+/* Экран игры */
+#gameScreen>.statusbar{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 1024px;
+    margin-bottom: 16px;
+}
+#gameScreen>.statusbar>*{margin-right: auto; display: block;}
+#gameScreen>.statusbar>*:last-child{margin-right: 0;}
+#gameScreen>.statusbar span{
+    font-weight: 600;
+}
+#gameScreen>.mobileActions{
+    min-width: 1024px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
