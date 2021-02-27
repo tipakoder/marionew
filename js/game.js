@@ -97,24 +97,27 @@
     ];
 
     // Всё что связанно с игроком
-    window.player = {
-        velocityx: 0,
-        velocityy: 0,
-        x: 0,
-        y: 0,
-        mass: 3,
-        points: 0,
-        unityPoints: 0,
-        lives: maxLives,
-        invun: false,
-        spawnpointx: 0,
-        spawnpointy: 0,
-        dead: false,
-        god: false,
-        cybersport: false,
-        jumpstate: "ReadyToJump",
-        lastDirection: "right",
-    };
+    function playerInit() {
+        window.player = {
+            velocityx: 0,
+            velocityy: 0,
+            x: 0,
+            y: 0,
+            mass: 3,
+            points: 0,
+            unityPoints: 0,
+            lives: maxLives,
+            invun: false,
+            spawnpointx: 0,
+            spawnpointy: 0,
+            dead: false,
+            god: false,
+            cybersport: false,
+            jumpstate: "ReadyToJump",
+            lastDirection: "right",
+        };
+    }
+    playerInit();
 
     function setSpawnPoint(x, y) {
         player.spawnpointx = x;
@@ -130,11 +133,7 @@
         console.warn("Вы умерли, перезапуск игры через 5 секунд");
         document.getElementById("gameScreen").style.display = "none";
         document.getElementById("deadScreen").style.display = "flex";
-        clearInterval(timerPlayerWalk);
-        clearInterval(timerMonsterAnimation);
-        clearInterval(timer);
-        cancelAnimationFrame(requestFrame);
-        started = false;
+        resetAll();
         // Перезапускаем игру через 5 секунд
         setTimeout(gameStart, 5000);
     }
@@ -705,6 +704,18 @@
             requestFrame = requestAnimationFrame(update);
     }
 
+    function resetAll() {
+        started = false;
+        // Остановка старых таймеров
+        clearInterval(timerPlayerWalk);
+        clearInterval(timerMonsterAnimation);
+        clearInterval(timer);
+        cancelAnimationFrame(requestFrame);
+        // Отчистка нужных переменных
+        enemys = [];
+        playerInit();
+    }
+
     function render() {
         // Задний фон
         if (backgrounds[level.background] !== undefined) {
@@ -784,12 +795,7 @@
     }
 
     function loadLevel(i) {
-        started = false;
-        // Остановка старых таймеров
-        clearInterval(timerPlayerWalk);
-        clearInterval(timerMonsterAnimation);
-        clearInterval(timer);
-        cancelAnimationFrame(requestFrame);
+        resetAll();
         // Присваиваем текущий левл в рендер
         currentLevel = i;
         level = Object.assign({}, levels[i]);
@@ -810,18 +816,14 @@
         } else {
             endGame();
         }
-        // Остановка старых таймеров
-        clearInterval(timerPlayerWalk);
-        clearInterval(timerMonsterAnimation);
-        clearInterval(timer);
-        cancelAnimationFrame(requestFrame);
+        resetAll();
         // Загружаем следующий уровень
         loadLevel(currentLevel);
     }
 
     function gameStart() {
+        resetAll();
         started = true;
-        player.lives = maxLives;
         seconds = 0;
         minutes = 0;
         // Отключаем ненужный экран
@@ -834,12 +836,7 @@
     }
 
     function endGame() {
-        // Выключаем всё
-        started = false;
-        clearInterval(timerPlayerWalk);
-        clearInterval(timerMonsterAnimation);
-        clearInterval(timer);
-        cancelAnimationFrame(requestFrame);
+        resetAll();
     }
 
     function activeGameStart() {
