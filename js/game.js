@@ -1,4 +1,4 @@
-(function(){
+(function() {
 
     // Основные переменные
     let canvas = document.getElementById("viewport");
@@ -11,6 +11,7 @@
     let timerPlayerWalk;
     let timerMonsterAnimation;
     let timer;
+    let requestFrame;
 
     // Портал
     let portal = {
@@ -114,26 +115,32 @@
         jumpstate: "ReadyToJump",
         lastDirection: "right",
     };
-    function setSpawnPoint(x, y){
+
+    function setSpawnPoint(x, y) {
         player.spawnpointx = x;
         player.spawnpointy = y;
     }
-    function setPosition(x, y){
+
+    function setPosition(x, y) {
         player.x = x;
         player.y = y;
     }
-    function killPlayer(){
+
+    function killPlayer() {
         console.warn("Вы умерли, перезапуск игры через 5 секунд");
         document.getElementById("gameScreen").style.display = "none";
         document.getElementById("deadScreen").style.display = "flex";
         clearInterval(timerPlayerWalk);
         clearInterval(timerMonsterAnimation);
         clearInterval(timer);
+        cancelAnimationFrame(requestFrame);
         started = false;
         // Перезапускаем игру через 5 секунд
         setTimeout(gameStart, 5000);
     }
+
     function onkey(e) {
+        if (!started) return;
         //обработка нажатий
         switch (e.key) {
             case "a":
@@ -171,20 +178,24 @@
                 break;
             case "R":
             case "r":
-                loadLevel(0);
+                gameStart();
                 minutes = 0;
                 seconds = 0;
-                unityScore = 0;
+                player.unityScore = 0;
                 break;
             case "C":
             case "c":
-                player.cybersport = true;
+                if (e.type == "keyup") {
+                    player.cybersport = true;
+                    console.warn("Активирован режим киберспорт");
+                }
                 break;
         }
     }
-    function updatePlayer(){
+
+    function updatePlayer() {
         // Если нет жизней - убиваем
-        if(player.lives <= 0)
+        if (player.lives <= 0)
             killPlayer();
 
         //Перемещение и коллизия игрока
@@ -289,12 +300,12 @@
                     level.data[Math.floor(player.x)][Math.round((player.y + 0.7 - player.velocityy))] == 'b' ||
                     level.data[Math.round(player.x)][Math.floor((player.y - player.velocityy))] == 'b' || (
                         (
-                        level.data[Math.round(player.x + 0.4)][Math.round((player.y - player.velocityy))] == '*' ||
-                        level.data[Math.round(player.x + 0.4)][Math.floor((player.y + 0.7 - player.velocityy))] == '*' ||
-                        level.data[Math.floor(player.x)][Math.round((player.y + 0.7 - player.velocityy))] == '*' ||
-                        level.data[Math.round(player.x)][Math.floor((player.y - player.velocityy))] == '*'
-                        ) 
-                    && !portal.opened)
+                            level.data[Math.round(player.x + 0.4)][Math.round((player.y - player.velocityy))] == '*' ||
+                            level.data[Math.round(player.x + 0.4)][Math.floor((player.y + 0.7 - player.velocityy))] == '*' ||
+                            level.data[Math.floor(player.x)][Math.round((player.y + 0.7 - player.velocityy))] == '*' ||
+                            level.data[Math.round(player.x)][Math.floor((player.y - player.velocityy))] == '*'
+                        ) &&
+                        !portal.opened)
                 ) {
                     player.velocityy = 0;
                     player.jumpstate = 'ReadyToJump'
@@ -456,12 +467,14 @@
             }
         }
     }
-    function damagedPlayer(){
+
+    function damagedPlayer() {
         player.invun = false;
         player.x = player.spawnpointx;
         player.y = player.spawnpointy;
-        if (player.CYBERSPORT) loadLevel(0);
+        if (player.cybersport) gameStart();
     }
+
     function checkTreasure() {
         //коллизия с сокровищем
         for (let i = 0; i < 8; i++) {
@@ -489,11 +502,12 @@
         "@": { type: 2, posx: 0, posy: 0, vel: 0, sprite: undefined, direction: "right", healt: 100, dead: false, animFrame: 0, animFrames: 2, anim: ["turtle_walk_1_L", "turtle_walk_2_L", "turtle_walk_1_R", "turtle_walk_2_R", "turtle_dead"] },
         "]": { type: 3, posx: 0, posy: 0, vel: 0, sprite: undefined, direction: "right", healt: 100, dead: false, animFrame: 0, animFrames: 4, anim: [] },
     };
-    function updateMonster(){
+
+    function updateMonster() {
         // Перебираем массив с монстрами
-        for(let it of enemys){
+        for (let it of enemys) {
             // Если монстр жив
-            if(!it.dead) {
+            if (!it.dead) {
                 switch (it.direction) {
                     case 'right':
                         switch (it.type) {
@@ -566,14 +580,14 @@
                                 }
                                 break;
                         }
-                        
-                    }
+
+                }
 
                 it.posx = parseFloat((it.posx + it.vel).toFixed(2));
             }
 
             // Отрисовываем врага, если у него есть спрайт
-            if(it.sprite !== undefined){
+            if (it.sprite !== undefined) {
                 switch (it.type) {
                     case 3:
                         ctx.drawImage(it.sprite, it.posx * tile, (it.posy * tile) - tile, 32, 32);
@@ -585,19 +599,20 @@
             }
         }
     }
-    function animationMonster(){
+
+    function animationMonster() {
         // Перебираем массив с монстрами
-        for(let it of enemys){
-            if(it.direction == "right"){
+        for (let it of enemys) {
+            if (it.direction == "right") {
                 // Анимация движения вправо
-                if(it.animFrames*2 > it.animFrame){
+                if (it.animFrames * 2 > it.animFrame) {
                     it.animFrame++;
                 } else {
                     it.animFrame = it.animFrame;
                 }
             } else {
                 // Анимация движения влево
-                if(it.animFrames > it.animFrame){
+                if (it.animFrames > it.animFrame) {
                     it.animFrame++;
                 } else {
                     it.animFrame = 0;
@@ -613,32 +628,35 @@
     let sprites = {};
     let spritesToLoad = 0;
     let spritesLoaded = false;
-    function loadSprites(list){
-        spritesToLoad += (list.length-1);
-        for(let it of list){
-            if(it.key != undefined){
+
+    function loadSprites(list) {
+        spritesToLoad += (list.length - 1);
+        for (let it of list) {
+            if (it.key != undefined) {
                 let img = new Image();
                 img.src = it.src;
-                img.onload = function(e){
+                img.onload = function(e) {
                     e.preventDefault();
                     sprites[it.key] = img;
-                    if(spritesToLoad == Object.keys(sprites).length) spritesReady();
+                    if (spritesToLoad == Object.keys(sprites).length) spritesReady();
                 };
-                img.onerror = function(e){
+                img.onerror = function(e) {
                     e.preventDefault();
-                    console.warn("Ошибка загрузки ["+it.key+"] по адресу '"+it.src+"'");
+                    console.warn("Ошибка загрузки [" + it.key + "] по адресу '" + it.src + "'");
                 }
             }
         }
     }
-    function spritesReady(){
+
+    function spritesReady() {
         console.info("Все ресурсы игры успешно загружены! :-)");
         spritesLoaded = true;
         // Активируем игру
         activeGameStart();
     }
-    function getSprite(key){
-        if(sprites[key] != undefined){
+
+    function getSprite(key) {
+        if (sprites[key] != undefined) {
             return sprites[key];
         }
         return false;
@@ -650,8 +668,9 @@
     let levels = [];
     let currentLevel = 0;
     let levelsLoaded = false;
-    function loadLevels(){
-        if( !levelsLoaded ){
+
+    function loadLevels() {
+        if (!levelsLoaded) {
             fetchRequest("getLevels.php", new FormData(), (result) => {
                 // Помечаем, что уровни загружены
                 levelsLoaded = true;
@@ -659,7 +678,7 @@
                 // Получаем все уровни
                 for (let level of result.levels) {
                     let lvlData = JSON.parse(level.data);
-                    levels.push({name: level.name, data: lvlData.data, background: lvlData.background});
+                    levels.push({ name: level.name, data: lvlData.data, background: lvlData.background });
                 }
                 // Активируем игру
                 activeGameStart();
@@ -669,53 +688,55 @@
     //-------------------------------------------------------
 
     // Основные функции игрового процесса
-    function ready(){
+    function ready() {
         // Загрузка спрайтов игры
         loadSprites(resourcesToLoad);
         // Загрузка уровней игры
         loadLevels();
     }
-    function update(){
+
+    function update() {
         render();
         updatePlayer();
         updateMonster();
         updateStatistic();
         checkTreasure();
-        if(started)
-            requestAnimationFrame(update);
+        if (started)
+            requestFrame = requestAnimationFrame(update);
     }
-    function render(){
+
+    function render() {
         // Задний фон
-        if( backgrounds[level.background] !== undefined ){
+        if (backgrounds[level.background] !== undefined) {
             ctx.drawImage(getSprite(backgrounds[level.background]), 0, 0, canvas.width, canvas.height);
         } else {
             ctx.drawImage(getSprite(backgrounds.simple), 0, 0, canvas.width, canvas.height);
         }
         // Все объекты
-        for(let i = 0; i < canvas.width / tile; i++){
-            for(let j = 0; j < canvas.height / tile; j++){
-                try{
-                    switch(level.data[i][j]){
+        for (let i = 0; i < canvas.width / tile; i++) {
+            for (let j = 0; j < canvas.height / tile; j++) {
+                try {
+                    switch (level.data[i][j]) {
                         // Кирпичная стена
                         case "1":
                             ctx.drawImage(getSprite("brick"), i * tile, j * tile, tile, tile);
                             break;
-                        // Бэдрок
+                            // Бэдрок
                         case "b":
                             ctx.drawImage(getSprite("backbrick"), i * tile, j * tile, tile, tile)
                             break;
-                        // Монетки
+                            // Монетки
                         case "2":
                             ctx.drawImage(getSprite("coin"), i * tile, j * tile, tile, tile)
                             break;
-                        // Марио
+                            // Марио
                         case "5":
                             setPosition(i, j);
                             setSpawnPoint(i, j);
                             // Удаляем его из рендера
                             level.data[i][j] = "0";
                             break;
-                        // Монстры
+                            // Монстры
                         case "3":
                         case "@":
                         case "]":
@@ -726,7 +747,7 @@
                             // Удаляем его их рендера
                             level.data[i][j] = "0";
                             break;
-                        // Предпортальный блок
+                            // Предпортальный блок
                         case '*':
                             if (!portal.opened) {
                                 ctx.drawImage(getSprite("brick4"), i * tile, j * tile, tile, tile)
@@ -735,12 +756,12 @@
                         case ">":
                         case "<":
                         case "^":
-                            if(portal.cnt) {
+                            if (portal.cnt) {
                                 portal.x.push(i);
                                 portal.y.push(j);
                             }
                             let sprite;
-                            switch(level.data[i][j]){
+                            switch (level.data[i][j]) {
                                 case "^":
                                     sprite = getSprite("tubeT");
                                     break;
@@ -751,31 +772,40 @@
                                     sprite = getSprite("tubeL");
                                     break;
                             }
-                            ctx.drawImage(sprite, i * tile, j * tile, tile*2, tile*2);
+                            ctx.drawImage(sprite, i * tile, j * tile, tile * 2, tile * 2);
                             break;
                     }
                     portal.cnt = false;
-                }catch(e){
+                } catch (e) {
                     // console.error(e);
                 }
             }
         }
     }
-    function loadLevel(i){
+
+    function loadLevel(i) {
+        started = false;
+        // Остановка старых таймеров
+        clearInterval(timerPlayerWalk);
+        clearInterval(timerMonsterAnimation);
+        clearInterval(timer);
+        cancelAnimationFrame(requestFrame);
         // Присваиваем текущий левл в рендер
         currentLevel = i;
         level = Object.assign({}, levels[i]);
         document.getElementById("gameScreenLevelName").textContent = level.name;
         // Запуск таймеров
-        timerPlayerWalk = setInterval(() => {player.walkFrame++; if (player.walkFrame > 3) { player.walkFrame = 1;} }, 200);
+        timerPlayerWalk = setInterval(() => { player.walkFrame++; if (player.walkFrame > 3) { player.walkFrame = 1; } }, 200);
         timerMonsterAnimation = setInterval(animationMonster, 250);
         timer = setInterval(updateTimer, 1000);
         // Запуск
+        started = true;
         update();
     }
-    function win(){
+
+    function win() {
         // Если текущий уровень не последний, грузим следующий
-        if( (currentLevel + 1) < (levels.length - 1) ){
+        if ((currentLevel + 1) < (levels.length - 1)) {
             currentLevel++;
         } else {
             endGame();
@@ -784,10 +814,12 @@
         clearInterval(timerPlayerWalk);
         clearInterval(timerMonsterAnimation);
         clearInterval(timer);
+        cancelAnimationFrame(requestFrame);
         // Загружаем следующий уровень
         loadLevel(currentLevel);
     }
-    function gameStart(){
+
+    function gameStart() {
         started = true;
         player.lives = maxLives;
         seconds = 0;
@@ -800,81 +832,87 @@
         // Загружаем уровень
         loadLevel(0);
     }
-    function endGame(){
+
+    function endGame() {
         // Выключаем всё
         started = false;
         clearInterval(timerPlayerWalk);
         clearInterval(timerMonsterAnimation);
         clearInterval(timer);
+        cancelAnimationFrame(requestFrame);
     }
-    function activeGameStart(){
+
+    function activeGameStart() {
         // Если всё подгружено включаем возможность продолжить
-        if(spritesLoaded && levelsLoaded){
+        if (spritesLoaded && levelsLoaded) {
             document.getElementById("startGameLoading").style.display = "none";
             document.getElementById("startGameText").style.display = "block";
             document.getElementById("startGameButton").style.display = "block";
-            document.addEventListener("keydown", (e) => { if(e.key === "Enter") authUser(); });
+            document.addEventListener("keydown", (e) => { if (e.key === "Enter") authUser(); });
         }
     }
-    function updateTimer(){
+
+    function updateTimer() {
         seconds++;
         unitySeconds++;
-        if(seconds == 60){
+        if (seconds == 60) {
             minutes++;
             seconds = 0;
         }
-        if(unitySeconds == 60){
+        if (unitySeconds == 60) {
             unityMinutes++;
             unitySeconds = 0;
         }
-        // Показываем
-        let secondsShow = (seconds > 9) ? seconds : "0" + seconds; 
-        let minutesShow = (minutes > 9) ? minutes : "0" + minutes; 
-        document.getElementById("gameScreenTime").textContent = minutesShow+":"+secondsShow;
     }
+
     function updateStatistic() {
         document.getElementById("gameScreenCoins").textContent = player.points;
         document.getElementById("gameScreenLives").textContent = player.lives;
+        // Время
+        let secondsShow = (seconds > 9) ? seconds : "0" + seconds;
+        let minutesShow = (minutes > 9) ? minutes : "0" + minutes;
+        document.getElementById("gameScreenTime").textContent = minutesShow + ":" + secondsShow;
     }
     //-------------------------------------------------------
 
     // Fetch-запрос на PHP
-    let fetchRequest = async(url, data, func = ()=>{}, errfunc = ()=>{} ) => {
-        fetch(
-            urlToPHP + url, {
-            method: "POST",
-            body: data
-        }).then(async(res) => {
-            let dataRes = await res.json();
-            return dataRes;
-        }).then((data) => {
-            if(data.type != 'success') {
-                console.error('--> ошибка :( <--');
-                errfunc(data.data);
-            } else {
-                console.info('--> успех :) <--');
-                func(data.data);
-            }
-        }).catch((error) => {
-            console.log('--> ошибка :( <--');
-            errfunc(error);
-            console.log(error);
-        });
-    }
-    //-------------------------------------------------------
+    let fetchRequest = async(url, data, func = () => {}, errfunc = () => {}) => {
+            fetch(
+                urlToPHP + url, {
+                    method: "POST",
+                    body: data
+                }).then(async(res) => {
+                let dataRes = await res.json();
+                return dataRes;
+            }).then((data) => {
+                if (data.type != 'success') {
+                    console.error('--> ошибка :( <--');
+                    errfunc(data.data);
+                } else {
+                    console.info('--> успех :) <--');
+                    func(data.data);
+                }
+            }).catch((error) => {
+                console.log('--> ошибка :( <--');
+                errfunc(error);
+                console.log(error);
+            });
+        }
+        //-------------------------------------------------------
 
     // Авторизация пользователя
-    function authUser(){
+    function authUser() {
         // Выключаем главный экран
         document.getElementById("startGameScreen").style.display = "none";
         // Идём далее
-        if( getCookie("user") !== null ){
+        if (getCookie("user") !== null) {
             gameStart();
         } else {
             document.getElementById("authUser").style.display = "flex";
         }
     }
-    function authUserProcess(e){
+
+    function authUserProcess(e) {
         e.preventDefault();
         let formData = new FormData(this);
         fetchRequest("auth.php", formData, (result) => {
@@ -884,27 +922,28 @@
         }, (result) => {
             document.getElementById("authUserFormError").textContent = result;
             document.getElementById("authUserFormError").style.display = "block";
-        }); 
+        });
     }
     //-------------------------------------------------------
 
     // Функции для работы с Cookie
-    function setCookie(name,value,days) {
+    function setCookie(name, value, days) {
         var expires = "";
         if (days) {
             var date = new Date();
-            date.setTime(date.getTime() + (days*24*60*60*1000));
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
             expires = "; expires=" + date.toUTCString();
         }
-        document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+        document.cookie = name + "=" + (value || "") + expires + "; path=/";
     }
+
     function getCookie(name) {
         var nameEQ = name + "=";
         var ca = document.cookie.split(';');
-        for(var i=0;i < ca.length;i++) {
+        for (var i = 0; i < ca.length; i++) {
             var c = ca[i];
-            while (c.charAt(0)==' ') c = c.substring(1,c.length);
-            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
         }
         return null;
     }
